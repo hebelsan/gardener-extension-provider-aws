@@ -6,8 +6,9 @@ import (
 
 	awssdk "github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	awsclient "github.com/gardener/gardener-extension-provider-aws/pkg/aws/client"
 	"k8s.io/utils/ptr"
+
+	awsclient "github.com/gardener/gardener-extension-provider-aws/pkg/aws/client"
 )
 
 // AddRoute adds a route for the default vpc route table with myIpCidr as destination
