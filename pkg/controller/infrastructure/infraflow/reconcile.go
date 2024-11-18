@@ -1290,20 +1290,22 @@ const iamRolePolicyTemplate = `{
       "Resource": [
         "*"
       ]
-    },
-		{
-			"Effect": "Allow",
-			"Action": [
-				"elasticfilesystem:DescribeAccessPoints",
-				"elasticfilesystem:DescribeFileSystems",
-				"elasticfilesystem:DescribeMountTargets",
-				"elasticfilesystem:CreateAccessPoint",
-				"elasticfilesystem:DeleteAccessPoint",
-				"elasticfilesystem:TagResource",
-				"ec2:DescribeAvailabilityZones"
-			],
-			"Resource": "*"
-		} {{ if .enableECRAccess }},
+    } {{ if .enableEfsAccess }},
+	{
+      "Effect": "Allow",
+      "Action": [
+        "elasticfilesystem:DescribeAccessPoints",
+        "elasticfilesystem:DescribeFileSystems",
+        "elasticfilesystem:DescribeMountTargets",
+        "elasticfilesystem:CreateAccessPoint",
+        "elasticfilesystem:DeleteAccessPoint",
+        "elasticfilesystem:TagResource",
+        "ec2:DescribeAvailabilityZones"
+      ],
+      "Resource": [
+        "*"
+      ]
+	} {{ end }} {{ if .enableECRAccess }},
     {
       "Effect": "Allow",
       "Action": [
@@ -1324,16 +1326,18 @@ const iamRolePolicyTemplate = `{
 
 func (c *FlowContext) ensureIAMRolePolicy(ctx context.Context) error {
 	log := LogFromContext(ctx)
-	enableECRAccess := true
-	if v := c.config.EnableECRAccess; v != nil {
-		enableECRAccess = *v
-	}
+	enableECRAccess := ptr.Deref(c.config.EnableECRAccess, true)
+	enableEfsAccess := ptr.Deref(c.config.EnableCsiEfs, false)
 	t, err := template.New("policyDocument").Parse(iamRolePolicyTemplate)
 	if err != nil {
 		return fmt.Errorf("parsing policyDocument template failed: %s", err)
 	}
 	var buffer bytes.Buffer
-	if err := t.Execute(&buffer, map[string]any{"enableECRAccess": enableECRAccess}); err != nil {
+	data := map[string]any{
+		"enableECRAccess": enableECRAccess,
+		"enableEfsAccess": enableEfsAccess,
+	}
+	if err := t.Execute(&buffer, data); err != nil {
 		return fmt.Errorf("executing policyDocument template failed: %s", err)
 	}
 
