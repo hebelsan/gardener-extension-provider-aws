@@ -31,13 +31,8 @@ spec:
         networking.gardener.cloud/to-public-networks: allowed
         networking.gardener.cloud/to-private-networks: allowed
         networking.resources.gardener.cloud/to-kube-apiserver-tcp-443: allowed
-{{- if .Values.podAnnotations }}
-      annotations:
-{{ toYaml .Values.podAnnotations | indent 8 }}
-{{- end }}
     spec:
-      automountServiceAccountToken: true # TODO could be false when token would be connected to sa
-{{/*      priorityClassName: gardener-system-300 # TODO only used in seed control plane*/}}
+      automountServiceAccountToken: true
       {{- if hasKey .Values.controller "hostNetwork" }}
       hostNetwork: {{ .Values.controller.hostNetwork }}
       {{- end }}
@@ -52,20 +47,14 @@ spec:
       {{- if .Values.controller.dnsPolicy }}
       dnsPolicy: {{ .Values.controller.dnsPolicy }}
       {{- end }}
-      {{- with .Values.controller.dnsConfig }}
-      dnsConfig: {{- toYaml . | nindent 8 }}
-      {{- end }}
       containers:
         - name: aws-csi-driver-efs
           image: {{ index .Values.images "csi-driver-efs" }}
           args:
             - --endpoint=$(CSI_ENDPOINT)
             - --logtostderr
-            {{- if .Values.controller.tags }}
-            - --tags={{ include "aws-efs-csi-driver.tags" .Values.controller.tags }}
-            {{- end }}
             - --v={{ .Values.controller.logLevel }}
-            - --delete-access-point-root-dir={{ hasKey .Values.controller "deleteAccessPointRootDir" | ternary .Values.controller.deleteAccessPointRootDir false }}
+            - --delete-access-point-root-dir={{ .Values.controller.deleteAccessPointRootDir }}
           env:
             - name: CSI_ENDPOINT
               value: unix:///var/lib/csi/sockets/pluginproxy/csi.sock

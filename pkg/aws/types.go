@@ -120,10 +120,9 @@ const (
 	// CSIVolumeModifierName is the constant for the name of the csi-volume-modifier.
 	CSIVolumeModifierName = "csi-volume-modifier"
 
-	CSIDriverEfsName      = "csi-driver-efs"
 	CSIEfsNodeName        = "csi-driver-efs-node"
 	CSIEfsControllerName  = "csi-driver-efs-controller"
-	CSIDriverEbfImageName = "csi-driver-efs"
+	CSIDriverEfsImageName = "csi-driver-efs"
 )
 
 var (

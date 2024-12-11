@@ -278,14 +278,14 @@ var (
 			{
 				Name: aws.CSIEfsNodeName,
 				Images: []string{
-					aws.CSIDriverEbfImageName,
+					aws.CSIDriverEfsImageName,
 					aws.CSINodeDriverRegistrarImageName,
 					aws.CSILivenessProbeImageName,
 					aws.CSIProvisionerImageName,
 				},
 				Objects: []*chart.Object{
 					// csi-driver-efs-node
-					{Type: &appsv1.DaemonSet{}, Name: "csi-driver-efs-node"},
+					{Type: &appsv1.DaemonSet{}, Name: aws.CSIEfsNodeName},
 					{Type: &storagev1.CSIDriver{}, Name: "efs.csi.aws.com"},
 					{Type: &corev1.ServiceAccount{}, Name: "efs-csi-node-sa"},
 					{Type: &rbacv1.ClusterRole{}, Name: "efs-csi-node-role"},
@@ -381,11 +381,6 @@ func (vp *valuesProvider) GetControlPlaneChartValues(
 		return nil, err
 	}
 
-	infraConfig, err := vp.decodeInfrastructureConfig(cluster)
-	if err != nil {
-		return nil, err
-	}
-
 	// TODO(rfranzke): Delete this in a future release.
 	if err := kutil.DeleteObject(ctx, vp.client, &corev1.ConfigMap{ObjectMeta: metav1.ObjectMeta{Name: "csi-driver-controller-observability-config", Namespace: cp.Namespace}}); err != nil {
 		return nil, fmt.Errorf("failed deleting legacy csi-driver-controller-observability-config ConfigMap: %w", err)
@@ -399,7 +394,7 @@ func (vp *valuesProvider) GetControlPlaneChartValues(
 		}
 	}
 
-	return getControlPlaneChartValues(cpConfig, cp, infraStatus, cluster, secretsReader, infraConfig, checksums, scaledDown, gep19Monitoring)
+	return getControlPlaneChartValues(cpConfig, cp, infraStatus, cluster, secretsReader, checksums, scaledDown, gep19Monitoring)
 }
 
 // GetControlPlaneShootChartValues returns the values for the control plane shoot chart applied by the generic actuator.
@@ -535,7 +530,6 @@ func getControlPlaneChartValues(
 	infraStatus *apisaws.InfrastructureStatus,
 	cluster *extensionscontroller.Cluster,
 	secretsReader secretsmanager.Reader,
-	infraConfig *apisaws.InfrastructureConfig,
 	checksums map[string]string,
 	scaledDown bool,
 	gep19Monitoring bool,
@@ -560,8 +554,6 @@ func getControlPlaneChartValues(
 		return nil, err
 	}
 
-	csiEfs := getCSIEfsControllerChartValues(infraConfig, cluster, scaledDown)
-
 	return map[string]interface{}{
 		"global": map[string]interface{}{
 			"genericTokenKubeconfigSecretName": extensionscontroller.GenericTokenKubeconfigSecretNameFromCluster(cluster),
@@ -570,7 +562,6 @@ func getControlPlaneChartValues(
 		aws.AWSCustomRouteControllerName:  crc,
 		aws.AWSLoadBalancerControllerName: alb,
 		aws.CSIControllerName:             csi,
-		aws.CSIEfsControllerName:          csiEfs,
 	}, nil
 }
 

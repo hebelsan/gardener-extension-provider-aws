@@ -15,7 +15,7 @@ kind: Secret
 metadata:
   name: core-aws
   namespace: garden-dev
-type: Opaque
+type: Opaque 
 data:
   accessKeyID: base64(access-key-id)
   secretAccessKey: base64(secret-access-key)
@@ -597,9 +597,8 @@ It is compatible with the legacy in-tree volume provisioner that was deprecated 
 End-users might want to update their custom `StorageClass`es to the new `ebs.csi.aws.com` provisioner.
 
 To deploy the efs-csi-driver add the annotation `enableCsiEfs: true` to your infrastructureConfig like in this [example](#example-shoot-manifest-one-availability-zone).
-Currently, we will deploy both the controller deployment and the node daemonset into the shoot cluster.
-We will add the necessary IAM privileges to your node instance profile from where the driver will read them via the ec2MetadataService.
-Therefore, it's prohibited to set the `instanceMetadataOptions` to `httpTokens = required` and `enableCsiEfs: true` at the same time.
+Currently, both the controller deployment and the node daemonset will be deployed into the shoot cluster. The necessary IAM privileges will be added to the node instance profile, allowing the driver to access them via the EC2 Metadata Service.
+**Important:** It is not permitted to set `instanceMetadataOptions` to `httpTokens = required` while also enabling `enableCsiEfs: true`. Doing so will prevent the driver from accessing the required metadata.
 
 ### Node-specific Volume Limits
 

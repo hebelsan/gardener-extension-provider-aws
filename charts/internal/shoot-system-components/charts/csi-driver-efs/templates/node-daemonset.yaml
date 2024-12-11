@@ -22,7 +22,7 @@ spec:
     spec:
       priorityClassName: system-node-critical
       hostNetwork: true
-      dnsPolicy: {{ .Values.dnsPolicy }}
+      dnsPolicy: {{ .Values.node.dnsPolicy }}
       serviceAccountName: {{ .Values.node.serviceAccount.name }}
       {{- with .Values.node.affinity }}
       affinity: {{- toYaml . | nindent 8 }}
@@ -59,7 +59,7 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
-            {{- if .Values.useFIPS }}
+            {{- if .Values.node.useFIPS }}
             - name: AWS_USE_FIPS_ENDPOINT
               value: "true"
             {{- end }}
