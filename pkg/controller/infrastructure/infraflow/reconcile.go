@@ -2417,8 +2417,9 @@ func (c *FlowContext) getSubnetZoneChild(zoneName string) Whiteboard {
 func (c *FlowContext) getSubnetKey(item *awsclient.Subnet) (string, string, error) {
 	zone := c.getZone(item)
 	// With IPv6 we don't have configuration for zone.Workers and zone.Internal.
-	// In that case, we get the subnetKey comparing the name tag.
-	if zone == nil || !containsIPv4(c.getIpFamilies()) {
+	// In BYO mode we also don't have CIDRs to match against, only subnet IDs.
+	// In that case, we get the subnetKey comparing the name tag or subnet ID from state.
+	if zone == nil || v1beta1.IsIPv6SingleStack(c.getIpFamilies()) || c.isBYOInfrastructure() {
 		// zone may have been deleted from spec, need to find subnetKey on other ways
 		zoneName := item.AvailabilityZone
 		if item.SubnetId != "" {
