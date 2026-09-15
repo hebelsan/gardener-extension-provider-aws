@@ -95,6 +95,9 @@ config:
 
 gardener:
   version: ""
+  clusterTypes:
+    seedCluster: false
+    gardenRuntimeCluster: false
   gardenlet:
     featureGates: {}
 # seed:
